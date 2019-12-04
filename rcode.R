@@ -1,6 +1,6 @@
 #Load required libraries
 
-lib_vec <- c("stringr", "httr", "jsonlite", "xml2","svDialogs", "read_excel","openxlsx", "httr")
+lib_vec <- c("stringr", "httr", "jsonlite", "xml2","svDialogs", "readxl","openxlsx", "httr", "rio")
 
 for(lib in lib_vec){
   if(!require(lib, character.only = T)){
@@ -46,7 +46,7 @@ for(proj in url_vectors){
     
     assign(proj, httr::GET(proj, write_disk(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"), overwrite = TRUE)))
     
-    main_df_list[[str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)")]] <- readxl::read_excel(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
+    main_df_list[[str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)")]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
   },
   error= function(cond){
     print("Data is yet to be submitted")
@@ -58,7 +58,7 @@ for(proj in url_vectors){
   
 }
 
-###################### With Repeat Groups to be Implemented
-#Using Primary and Foreign Keys
-#Accessing actual data names
+
+#This is list of lists of dataframes based on the number of projects
+main_df_list
 
