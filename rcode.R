@@ -1,4 +1,5 @@
 #Load required libraries
+rm(list = ls())
 
 lib_vec <- c("stringr", "httr", "jsonlite", "xml2","svDialogs", "readxl","openxlsx", "httr", "rio")
 
@@ -12,11 +13,11 @@ for(lib in lib_vec){
 #Kobo Info api
 kobo_data_api <- "https://kf.kobotoolbox.org/assets"
 
-user_name <- dlg_input(message =  "Enter Kobo User Name:")
-user_password <- dlg_input(message =  "Enter Kobo User Password:")
+user_name <- dlg_input(message =  "Enter Kobo User Name:")$res
+user_password <- dlg_input(message =  "Enter Kobo User Password:")$res
 
 #Pull infor
-data_inf  <- GET(kobo_data_api, authenticate(user_name$res, user_password$res,type = "basic"))
+data_inf  <- GET(kobo_data_api, authenticate(user =  user_name,password =  user_password,type = "basic"))
 
 #Extract Content
 data_content_txt <- httr::content(data_inf, as = "text")
@@ -31,7 +32,7 @@ form_id_vec <- str_extract(form_id_string, pattern = form_id_pattern )
 
 
 base_url = "https://kc.kobotoolbox.org/"
-username = paste0(user_name$res, "/reports/")
+username = paste0(user_name, "/reports/")
 export = "/export.xlsx"
 
 url_vectors <- c()
@@ -61,4 +62,12 @@ for(proj in url_vectors){
 
 #This is list of lists of dataframes based on the number of projects
 main_df_list
+
+
+# Saving into google drive
+
+
+
+
+
 
