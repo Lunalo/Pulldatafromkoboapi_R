@@ -29,7 +29,7 @@ form_id_pattern = "(?<=/)[A-Za-z0-9_]{2,50}$"
 
 #Extract form IDs and save them in a character vector
 form_id_vec <- str_extract(form_id_string, pattern = form_id_pattern )
-form_names <- data_content_json$results$settings.description
+form_names <- data_content_json$results$name
 form_df <- data.frame(form_names=form_names, form_id = form_id_vec)
 
 base_url = "https://kc.kobotoolbox.org/"
@@ -49,7 +49,7 @@ for(proj in url_vectors){
     
     assign(proj, httr::GET(proj, write_disk(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"), overwrite = TRUE)))
     
-    main_df_list[[as.character(form_df[ form_df$form_id == str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)"), "form_names"])]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
+    main_df_list[[ str_replace_all(as.character(form_df[ form_df$form_id == str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)"), "form_names"]), pattern = " ", "_")]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
   },
   error= function(cond){
     print("Data is yet to be submitted")
