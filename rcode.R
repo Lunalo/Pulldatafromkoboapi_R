@@ -23,16 +23,16 @@ data_inf  <- GET(kobo_data_api, authenticate(user =  user_name,password =  user_
 data_content_txt <- httr::content(data_inf, as = "text")
 data_content_json <- fromJSON(data_content_txt, flatten = TRUE)
 
-form_id_string <-  data_content_json$results$deployment__identifier
+
+base_url = "https://kc.kobotoolbox.org/"
+form_id_string <-  data_content_json$results$url
 form_id_string <- form_id_string[!is.na(form_id_string)]
-form_id_pattern = "(?<=/)[A-Za-z0-9_]{2,50}$"
+form_id_pattern = "(?<=/assets/)[A-Za-z0-9_]{2,50}"
 
 #Extract form IDs and save them in a character vector
 form_id_vec <- str_extract(form_id_string, pattern = form_id_pattern )
 form_names <- data_content_json$results$name
 form_df <- data.frame(form_names=form_names, form_id = form_id_vec)
-
-base_url = "https://kc.kobotoolbox.org/"
 username = paste0(user_name, "/reports/")
 export = "/export.xlsx"
 
