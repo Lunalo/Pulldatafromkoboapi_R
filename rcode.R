@@ -1,7 +1,7 @@
 #Load required libraries
 rm(list = ls())
 
-lib_vec <- c("stringr", "httr", "jsonlite", "xml2","svDialogs", "readxl","openxlsx", "httr", "rio")
+lib_vec <- c("stringr", "httr", "jsonlite", "xml2","svDialogs", "readxl","openxlsx", "httr", "rio","DataExplorer")
 
 for(lib in lib_vec){
   if(!require(lib, character.only = T)){
@@ -42,14 +42,14 @@ for(form in form_id_vec){
 }
 
 ###############################################################################################################################################
-main_df_list <- list()
+main_data_list <- list()
 
 for(proj in url_vectors){
   tryCatch({
     
     assign(proj, httr::GET(proj, write_disk(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"), overwrite = TRUE)))
     
-    main_df_list[[ str_replace_all(as.character(form_df[ form_df$form_id == str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)"), "form_names"]), pattern = " ", "_")]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
+    main_data_list[[ str_replace_all(as.character(form_df[ form_df$form_id == str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)"), "form_names"]), pattern = " ", "_")]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
   },
   error= function(cond){
     print("Data is yet to be submitted")
@@ -61,15 +61,158 @@ for(proj in url_vectors){
   
 }
 
+kobo_content_list <- list()
 
-#This is list of lists of dataframes based on the number of projects
-main_df_list
-
-
-# Saving into google drive
-
+#Remember to add checks
+kobo_content_list[["main_data_list"]] <- main_data_list
+kobo_content_list[["general_content"]] <- data_content_json$results
 
 
 
+#Extract number of Forms with Data
+number_of_forms_with_data <- function(form_list=NULL){
+  tryCatch( {num <- length(form_list)},
+            error= function(cond){
+              print("use get_data_from_kobo function to pull data before running this function")
+            },
+            finally = {
+              
+              if(num==0){
+                return("The form_list is blank")
+              }else{
+                return(num)
+              }
+              
+            }
+  )
+  
+}
+
+extract_forms_online(form_list = kobo_content_list[["main_data_list"]])
+extract_forms_online()
+
+
+#Extract names of Forms with Data
+names_of_forms_with_data <- function(form_list=NULL){
+  tryCatch( {num <- names(form_list)},
+            error= function(cond){
+              print("use get_data_from_kobo function to pull data before running this function")
+              
+            },
+            finally = {
+              
+              if(is.null(num)){
+                return("The form_list is blank")
+              }else{
+                return(num)
+              }
+              
+            }
+  )
+  
+}
+
+
+names_of_forms_with_data(form_list = kobo_content_list[["main_data_list"]])
+names_of_forms_with_data()
+
+
+#pull_user_names
+
+kobo_user_name <- function(kobo_content=NULL){
+  tryCatch( {usnam <- unique(kobo_content["owner__username"])},
+            
+            
+            error= function(cond){
+              print("use get_data_from_kobo function to pull data before running this function")
+              return(NULL)
+            },
+            finally = {
+              
+              if(is.null(usnam)){
+                return("The content Dataframe is blank")
+              }else{
+                return(usnam)
+              }
+              
+            }
+  )
+  
+}
+
+kobo_user_name(kobo_content = kobo_content_list$general_content)
+kobo_user_name()
+
+#Number of surveys per Country
+
+surveys_per_country <- function(kobo_content=NULL){
+  library(dplyr)
+  country_names <- unlist(kobo_content[,"settings.country"])[names(unlist(kobo_content[,"settings.country"])) %in%c("label")]
+
+  if(is.null(country_names)){
+    return("The content Dataframe is blank")
+  }else{
+    return(table(country_names[names(country_names)%in% c("label")]))
+  }
+  
+}
+
+
+surveys_per_country(kobo_content = kobo_content_list$general_content)
+surveys_per_country()
+
+
+#Dates when submitted project were created
+
+project_deployment_dates <- function(kobo_content=NULL){
+  library(dplyr)
+  df_proj <- unique(kobo_content[kobo_content$deployment__active==TRUE, c("name", "date_created")])
+  if(is.null(df_proj)){
+    return("The content Dataframe is blank")
+  }else{
+    names(df_proj) <- c("Project Name", "Deployment Date")
+    return(df_proj)
+  }
+  
+}
+
+project_deployment_dates(kobo_content_list$general_content)
+project_deployment_dates()
+
+
+#Projects Modification Dates
+
+project_modification_dates <- function(kobo_content=NULL){
+  library(dplyr)
+  df_proj <- unique(kobo_content[kobo_content$deployment__active==TRUE, c("name", "date_modified")])
+  if(is.null(df_proj)){
+    return("The content Dataframe is blank")
+  }else{
+    names(df_proj) <- c("Project Name", "Modification Date")
+    return(df_proj)
+  }
+  
+}
+
+project_modification_dates(kobo_content_list$general_content)
+project_modification_dates()
+
+#Project Name by ID
+
+project_IDs <- function(kobo_content=NULL){
+  form_id_pattern = "(?<=/assets/)[A-Za-z0-9_]{2,50}"
+  df_proj <- unique(kobo_content[kobo_content$deployment__active==TRUE, c("name", "url")])
+  df_proj[, "url"]<- str_extract(df_proj[, "url"], pattern = form_id_pattern )
+  if(is.null(df_proj)){
+    return("The content Dataframe is blank")
+  }else{
+    names(df_proj) <- c("Project Name", "Project ID")
+    return(df_proj)
+  }
+  
+}
+
+project_IDs(kobo_content_list$general_content)
+project_IDs()
 
 
