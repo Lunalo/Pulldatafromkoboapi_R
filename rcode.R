@@ -49,7 +49,7 @@ for(proj in url_vectors){
     
     assign(proj, httr::GET(proj, write_disk(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"), overwrite = TRUE)))
     
-    main_data_list[[ str_replace_all(as.character(form_df[ form_df$form_id == str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_]{2,50}(?=/export\\.xlsx$)"), "form_names"]), pattern = " ", "_")]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
+    main_data_list[[ str_replace_all(as.character(form_df[ form_df$form_id == str_extract(proj, pattern = "(?<=/)[A-Za-z0-9_\\-,]{2,50}(?=/export\\.xlsx$)"), "form_names"]), pattern = " ", "_")]] <- import_list(paste0(str_extract(proj, pattern = form_id_pattern ),".xlsx"))
   },
   error= function(cond){
     print("Data is yet to be submitted")
@@ -117,8 +117,7 @@ names_of_forms_with_data(form_list = kobo_content_list[["main_data_list"]])
 names_of_forms_with_data()
 
 
-#pull_user_names
-
+#pull user names
 kobo_user_name <- function(kobo_content=NULL){
   tryCatch( {usnam <- unique(kobo_content["owner__username"])},
             
@@ -144,7 +143,6 @@ kobo_user_name(kobo_content = kobo_content_list$general_content)
 kobo_user_name()
 
 #Number of surveys per Country
-
 surveys_per_country <- function(kobo_content=NULL){
   library(dplyr)
   country_names <- unlist(kobo_content[,"settings.country"])[names(unlist(kobo_content[,"settings.country"])) %in%c("label")]
@@ -163,7 +161,6 @@ surveys_per_country()
 
 
 #Dates when submitted project were created
-
 project_deployment_dates <- function(kobo_content=NULL){
   library(dplyr)
   df_proj <- unique(kobo_content[kobo_content$deployment__active==TRUE, c("name", "date_created")])
@@ -181,7 +178,6 @@ project_deployment_dates()
 
 
 #Projects Modification Dates
-
 project_modification_dates <- function(kobo_content=NULL){
   library(dplyr)
   df_proj <- unique(kobo_content[kobo_content$deployment__active==TRUE, c("name", "date_modified")])
@@ -198,7 +194,6 @@ project_modification_dates(kobo_content_list$general_content)
 project_modification_dates()
 
 #Project Name by ID
-
 project_IDs <- function(kobo_content=NULL){
   form_id_pattern = "(?<=/assets/)[A-Za-z0-9_]{2,50}"
   df_proj <- unique(kobo_content[kobo_content$deployment__active==TRUE, c("name", "url")])
@@ -214,5 +209,45 @@ project_IDs <- function(kobo_content=NULL){
 
 project_IDs(kobo_content_list$general_content)
 project_IDs()
+
+#Number of Repeat groups per form
+number_of_rpt_groups_per_form <- function(form_list = NULL){
+  rp_groups <- unlist(lapply(form_list,FUN = length))
+  
+  if(is.null(rp_groups)){
+    return("The content Dataframe is blank")
+  }else{
+    return(ifelse(rp_groups<1, rp_groups,rp_groups-1))
+  }
+  
+}
+number_of_rpt_groups_per_form()
+number_of_rpt_groups_per_form(form_list = kobo_content_list$main_data_list)
+
+
+#Names of Repeat groups per form
+names_of_rpt_groups_per_form <- function(form_list = NULL){
+  frm_list <- lapply(form_list, FUN = names)
+  
+  lst_rpt <- list()
+  for(nam in names(frm_list)){
+    if(length(frm_list[[nam]])>1){
+      lst_rpt[[nam]] <- frm_list[[nam]]
+    }
+    
+  }
+  if(length(lst_rpt)>0){
+    return(lst_rpt)
+    
+  }else{
+    return("Data list is empty")
+  }
+}
+
+names_of_rpt_groups_per_form()
+names_of_rpt_groups_per_form(form_list = kobo_content_list$main_data_list)
+
+
+
 
 
